@@ -1,23 +1,12 @@
 import Head from 'next/head'
-import { Navbar, Nav } from 'react-bootstrap'
+import { Navbar, Nav, Container } from 'react-bootstrap'
 import { useRouter } from 'next/router'
-import { notification } from 'antd'
 import { clearItem } from '../../utils/localStoreage'
-
-const showNotification = (type: 'success' | 'error', errorMessage?) => {
-    let message = 'Logout Success'
-    let description = errorMessage
-    notification[type]({
-        message,
-        description,
-    })
-}
 
 const Header = () => {
     const router = useRouter()
     const handleClickExit = () => {
         clearItem()
-        showNotification('success')
         router.push('/')
     }
 
@@ -25,36 +14,47 @@ const Header = () => {
         <>
             <Head>
                 <title>MongoDB to HarperDB</title>
-                <link rel="icon" href="/logo.png" />
+                <link rel="icon" href="/favicon_purple.png" />
+                <link
+                    href="https://use.typekit.net/pau0eyr.css"
+                    rel="stylesheet"
+                />
             </Head>
+            <Navbar
+                collapseOnSelect
+                bg="light"
+                variant="dark"
+                className="topnav"
+            >
+                <Container>
+                    <Navbar.Brand>
+                        <img
+                            alt=""
+                            src="/logo_circle.png"
+                            width="142"
+                            height="40"
+                            className="d-inline-block align-top"
+                        />
+                    </Navbar.Brand>
 
-            <Navbar collapseOnSelect bg="dark" variant="dark">
-                <Navbar.Brand>
-                    <img
-                        alt=""
-                        src="/logo.png"
-                        width="30"
-                        height="30"
-                        className="d-inline-block align-top"
-                    />{' '}
-                    MongoDB to HarperDB
-                </Navbar.Brand>
-
-                <Navbar.Collapse>
-                    <Nav className="mr-auto"></Nav>
-                    <Nav>
-                        {router.pathname === '/schema' ? (
-                            <Nav.Link
-                                style={{ fontSize: 16 }}
-                                onClick={handleClickExit}
-                            >
-                                Logout
-                            </Nav.Link>
-                        ) : (
-                            ''
-                        )}
-                    </Nav>
-                </Navbar.Collapse>
+                    <Navbar.Collapse>
+                        <Nav className="mr-auto" />
+                        <Nav>
+                            {router.pathname === '/schema' ? (
+                                <Nav.Link
+                                    style={{ fontSize: 16 }}
+                                    onClick={handleClickExit}
+                                >
+                                    New Connection
+                                </Nav.Link>
+                            ) : (
+                                <h4 className="mb-0 text-white">
+                                    MongoDB Migrator
+                                </h4>
+                            )}
+                        </Nav>
+                    </Navbar.Collapse>
+                </Container>
             </Navbar>
         </>
     )

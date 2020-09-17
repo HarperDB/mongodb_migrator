@@ -1,27 +1,10 @@
 import { AppProps } from 'next/app'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'antd/dist/antd.css'
+import '../styles/style.css'
 
-function MyApp({ Component, pageProps }: AppProps) {
-    return (
-        <>
-            <Component {...pageProps} />
-            <style jsx global>{`
-                html,
-                body {
-                    padding: 0;
-                    margin: 0;
-                    font-family: -apple-system, BlinkMacSystemFont, Segoe UI,
-                        Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans,
-                        Helvetica Neue, sans-serif;
-                }
-
-                * {
-                    box-sizing: border-box;
-                }
-            `}</style>
-        </>
-    )
-}
+const MyApp = ({ Component, pageProps }: AppProps) => (
+    <Component {...pageProps} />
+)
 
 export default MyApp

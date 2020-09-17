@@ -1,0 +1,36 @@
+html,
+body {
+    padding: 0;
+    margin: 0;
+    font-family: 'proxima-soft', Helvetica-Neue, Helvetica, Verdana, Sans-Serif !important;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.topnav {
+    background: linear-gradient(45deg, #312556, #403b8a, #7a3a87);
+}
+
+.card {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.15) !important;
+}
+
+.btn-primary {
+    background-color: #403b8a !important;
+    border-color: #403b8a !important;
+}
+
+.btn-sm {
+    padding: 0.1rem 0.5rem;
+    font-size: 80%;
+}
+
+.text-larger {
+    font-size: 110%;
+}
+
+::placeholder {
+    color: #ddd !important;
+}

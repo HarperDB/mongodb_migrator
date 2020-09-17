@@ -1,34 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Button } from 'react-bootstrap'
-import { notification } from 'antd'
+import { Form, Button, Col, Row } from 'react-bootstrap'
 import axios, { AxiosRequestConfig } from 'axios'
 import { removeItem, setItem } from '../../utils/localStoreage'
 
 export interface MongoLoginProps {
     onConnected: any
-    onChecking: any
 }
 
-const MongoLogin: React.SFC<MongoLoginProps> = ({
-    onConnected,
-    onChecking,
-}) => {
-    const showNotification = (type: 'success' | 'error', errorMessage?) => {
-        let message = 'Connection Error'
-        let description = errorMessage
-            ? errorMessage
-            : 'Cannot connect to MongoDB'
-        if (type === 'success') {
-            message = 'Connection Succeeded'
-            description = 'Can connect to MongoDB'
-        }
-
-        notification[type]({
-            message,
-            description,
-        })
-    }
-
+const MongoLogin: React.SFC<MongoLoginProps> = ({ onConnected }) => {
     const [connectionString, setConnectionString] = useState('')
     const [checking, setChecking] = useState(false)
     const [isValid, setIsValid] = useState(false)
@@ -46,7 +25,6 @@ const MongoLogin: React.SFC<MongoLoginProps> = ({
 
     const checkMongoConnection = async () => {
         if (connectionString === '') {
-            showNotification('error', 'Connection string cannot be blank')
             let formMongoHost = document.getElementById('formMongoHost')
             formMongoHost.removeAttribute('class')
             formMongoHost.setAttribute('class', 'form-control is-invalid')
@@ -64,19 +42,16 @@ const MongoLogin: React.SFC<MongoLoginProps> = ({
             await axios(config)
                 .then((res) => {
                     if (res.status === 200) {
-                        showNotification('success')
                         setLocalStorageVal(true)
                         onConnected(true)
                         setIsValid(true)
                     } else {
-                        showNotification('error', 'Invalid credentials')
                         removeLocalStorageVal()
                         onConnected(false)
                         setIsValid(false)
                     }
                 })
                 .catch((err) => {
-                    showNotification('error', 'Invalid credentials')
                     removeLocalStorageVal()
                     onConnected(false)
                     setIsValid(false)
@@ -97,44 +72,46 @@ const MongoLogin: React.SFC<MongoLoginProps> = ({
         } else {
             checkMongoConnection()
         }
-    }, [onChecking])
+    }, [])
 
     return (
-        <div>
+        <>
+            <Row>
+                <Col xs={6}>
+                    <h5 className="mb-0">Source: MongoDB</h5>
+                </Col>
+                <Col xs={6} className="text-right">
+                    {isValid && (
+                        <b className="text-success text-larger">&#10004;</b>
+                    )}
+                </Col>
+            </Row>
+            <hr />
             <Form>
                 <Form.Group>
-                    <Form.Label>Mongo Connection String</Form.Label>
+                    <Form.Label>connection string</Form.Label>
                     <Form.Control
                         id="formMongoHost"
                         type="text"
-                        placeholder="Enter host"
+                        placeholder="mongodb://user:pass@mongodb.example.com/database_name"
                         value={connectionString}
                         onChange={(e) => setConnectionString(e.target.value)}
                         isInvalid={!isValid}
                         isValid={isValid}
                         required
                     />
-                    <Form.Text className="text-muted">
-                        Example mongodb://mongodb.example.com
-                    </Form.Text>
-                    <Form.Text className="text-muted">
-                        Or mongodb://mongodb.example.com/database_name
-                    </Form.Text>
-                    <Form.Text className="text-muted">
-                        Or
-                        mongodb+srv://user:pass@mongodb.example.com/database_name
-                    </Form.Text>
                 </Form.Group>
                 <Button
-                    variant="secondary"
+                    variant="primary"
                     type="button"
                     onClick={checkMongoConnection}
-                    disabled={checking}
+                    disabled={!connectionString || checking}
+                    block
                 >
-                    {checking ? 'Checking...' : 'Check connection'}
+                    {checking ? 'Verifying...' : 'Verify Connection'}
                 </Button>
             </Form>
-        </div>
+        </>
     )
 }
 

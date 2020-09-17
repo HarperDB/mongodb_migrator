@@ -1,35 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Button } from 'react-bootstrap'
-import { notification } from 'antd'
+import { Form, Button, Col, Row } from 'react-bootstrap'
 import axios, { AxiosRequestConfig } from 'axios'
 import { removeItem, setItem } from '../../utils/localStoreage'
 
 export interface HarperLoginProps {
     onConnected: any
-    onChecking: any
 }
 
-const HarperLogin: React.SFC<HarperLoginProps> = ({
-    onConnected,
-    onChecking,
-}) => {
-    const showNotification = (
-        type: 'success' | 'error',
-        errorMessage?: string
-    ) => {
-        let message = 'Connection Error'
-        let description = errorMessage || 'Fail connect to HarperDB'
-        if (type === 'success') {
-            message = 'Connection Succeeded'
-            description = 'Connected to HarperDB'
-        }
-
-        notification[type]({
-            message,
-            description,
-        })
-    }
-
+const HarperLogin: React.SFC<HarperLoginProps> = ({ onConnected }) => {
     const [hdbHostname, setHdbHostname] = useState('')
     const [hdbPassword, setHdbPassword] = useState('')
     const [hdbUsername, setHdbUsername] = useState('')
@@ -58,17 +36,14 @@ const HarperLogin: React.SFC<HarperLoginProps> = ({
             let attr = document.getElementById('formBasicHost')
             attr.removeAttribute('class')
             attr.setAttribute('class', 'form-control is-invalid')
-            showNotification('error', 'Hostname cannot be blank')
         } else if (!hdbUsername) {
             let attr = document.getElementById('formBasicUsername')
             attr.removeAttribute('class')
             attr.setAttribute('class', 'form-control is-invalid')
-            showNotification('error', 'Username cannot be blank')
         } else if (!hdbPassword) {
             let attr = document.getElementById('formBasicPassword')
             attr.removeAttribute('class')
             attr.setAttribute('class', 'form-control is-invalid')
-            showNotification('error', 'Password cannot be blank')
         } else {
             setChecking(true)
             const config: AxiosRequestConfig = {
@@ -84,7 +59,6 @@ const HarperLogin: React.SFC<HarperLoginProps> = ({
             await axios(config)
                 .then((res) => {
                     if (res.status === 200) {
-                        showNotification('success')
                         setLocalStorageVal(true)
                         onConnected(true)
                         setIsHostValid(true)
@@ -95,14 +69,9 @@ const HarperLogin: React.SFC<HarperLoginProps> = ({
                     if (err.message.includes('401')) {
                         setIsHostValid(true)
                         setIsAuthenValid(false)
-                        showNotification(
-                            'error',
-                            'HarperDB Authentication fail, Try again.'
-                        )
                     } else {
                         setIsHostValid(false)
                         setIsAuthenValid(false)
-                        showNotification('error', err.message)
                     }
 
                     removeLocalStorageVal()
@@ -127,60 +96,79 @@ const HarperLogin: React.SFC<HarperLoginProps> = ({
         } else {
             checkHdbConnection()
         }
-    }, [onChecking])
+    }, [])
 
     return (
         <div>
+            <Row>
+                <Col xs={6}>
+                    <h5 className="mb-0">Destination: HarperDB</h5>
+                </Col>
+                <Col xs={6} className="text-right">
+                    {isAuthenValid && isHostValid && (
+                        <b className="text-success text-larger">&#10004;</b>
+                    )}
+                </Col>
+            </Row>
+            <hr />
             <Form>
-                <Form.Group>
-                    <Form.Label>HarperDB Connection</Form.Label>
-                    <Form.Control
-                        id="formBasicHost"
-                        type="text"
-                        placeholder="Enter host"
-                        value={hdbHostname}
-                        onChange={(e) => setHdbHostname(e.target.value)}
-                        isInvalid={!isHostValid}
-                        isValid={isHostValid}
-                        required
-                    />
-                    <Form.Text className="text-muted">
-                        example: https://localhost:5000
-                    </Form.Text>
-                </Form.Group>
-                <Form.Group>
-                    <Form.Label>Username</Form.Label>
-                    <Form.Control
-                        id="formBasicUsername"
-                        type="text"
-                        placeholder="username"
-                        value={hdbUsername}
-                        onChange={(e) => setHdbUsername(e.target.value)}
-                        isInvalid={!isAuthenValid}
-                        isValid={isAuthenValid}
-                        required
-                    />
-                </Form.Group>
-                <Form.Group>
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control
-                        id="formBasicPassword"
-                        type="password"
-                        placeholder="Password"
-                        value={hdbPassword}
-                        onChange={(e) => setHdbPassword(e.target.value)}
-                        isInvalid={!isAuthenValid}
-                        isValid={isAuthenValid}
-                        required
-                    />
-                </Form.Group>
+                <Row>
+                    <Col md={4} xs={12}>
+                        <Form.Group>
+                            <Form.Label>url</Form.Label>
+                            <Form.Control
+                                id="formBasicHost"
+                                type="text"
+                                placeholder="https://localhost:9925"
+                                value={hdbHostname}
+                                onChange={(e) => setHdbHostname(e.target.value)}
+                                isInvalid={!isHostValid}
+                                isValid={isHostValid}
+                                required
+                            />
+                        </Form.Group>
+                    </Col>
+                    <Col md={4} xs={12}>
+                        <Form.Group>
+                            <Form.Label>username</Form.Label>
+                            <Form.Control
+                                id="formBasicUsername"
+                                type="text"
+                                placeholder="HDB_ADMIN"
+                                value={hdbUsername}
+                                onChange={(e) => setHdbUsername(e.target.value)}
+                                isInvalid={!isAuthenValid}
+                                isValid={isAuthenValid}
+                                required
+                            />
+                        </Form.Group>
+                    </Col>
+                    <Col md={4} xs={12}>
+                        <Form.Group>
+                            <Form.Label>password</Form.Label>
+                            <Form.Control
+                                id="formBasicPassword"
+                                type="password"
+                                placeholder="password"
+                                value={hdbPassword}
+                                onChange={(e) => setHdbPassword(e.target.value)}
+                                isInvalid={!isAuthenValid}
+                                isValid={isAuthenValid}
+                                required
+                            />
+                        </Form.Group>
+                    </Col>
+                </Row>
                 <Button
-                    variant="secondary"
+                    variant="primary"
                     type="button"
                     onClick={checkHdbConnection}
-                    disabled={checking}
+                    disabled={
+                        checking || !hdbHostname || !hdbUsername || !hdbPassword
+                    }
+                    block
                 >
-                    {checking ? 'checking...' : 'Check connection'}
+                    {checking ? 'Verifying...' : 'Verify Connection'}
                 </Button>
             </Form>
         </div>

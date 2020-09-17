@@ -1,13 +1,15 @@
 import Header from './layouts/Header'
 import ShowMongoSchema from '../components/ShowMongoSchema/ShowMongoSchema'
 import ShowHarperSchema from '../components/ShowHarperSchema/ShowHarperSchema'
-import { Button } from 'react-bootstrap'
+import { Button, Card, Col, Container, Row } from 'react-bootstrap'
 import { notification } from 'antd'
 import { getItem } from '../utils/localStoreage'
-import { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import axios, { AxiosRequestConfig } from 'axios'
 import { ISelectHarper } from '../types/Harperdb'
 import { ISelectMongo } from '../types/Mongodb'
+import useFetchHarperDB from '../hooks/useFetchHarperDB'
+import useFetchMongoDB from '../hooks/useFetchMongoDB'
 
 const DOCS_PER_PAGE: number = 1000
 let mongoDocsCount: number = 0
@@ -23,99 +25,15 @@ const showNotification = (
     let description = errorMessage ? errorMessage : 'Something wrong.'
 
     if (type === 'success') {
-        message = message
         description = !successMessage && !errorMessage ? '' : successMessage
     } else {
         message = 'Migration Error'
-        description = description
     }
 
     notification[type]({
         message,
         description,
     })
-}
-
-const useFetchHarperDB = () => {
-    const [loading, setLoading] = useState(false)
-    const [harperSchemas, setHarperSchemas] = useState([])
-    const [error, setError] = useState('')
-
-    const getHarperSchema = useCallback(async () => {
-        setLoading(true)
-        setError('')
-        const hdbUrl = getItem('hdbUrl')
-        const hdbAuth = getItem('hdbAuth')
-
-        const config: AxiosRequestConfig = {
-            method: 'POST',
-            baseURL: '/api/harper/schema',
-            data: {
-                hdbUrl,
-                hdbAuth,
-            },
-        }
-
-        return await axios(config)
-            .then((res) => {
-                if (res.status === 200) {
-                    setHarperSchemas(res.data)
-                }
-            })
-            .catch((err) => {
-                console.log(err)
-                setError(err.response.messageText)
-            })
-            .finally(() => {
-                setLoading(false)
-            })
-    }, [setHarperSchemas, setLoading, setHarperSchemas])
-
-    return [loading, harperSchemas, error, getHarperSchema] as const
-}
-
-const useFetchMongoDB = () => {
-    const [loading, setLoading] = useState(false)
-    const [mongoCollections, setMongoCollections] = useState([])
-    const [error, setError] = useState('')
-
-    const getMongoCollection = useCallback(async () => {
-        setLoading(true)
-        setError('')
-        const mongoConStr = getItem('mongoConStr')
-        const config: AxiosRequestConfig = {
-            method: 'POST',
-            baseURL: '/api/mongo/collection',
-            data: {
-                mongoConStr,
-            },
-        }
-
-        return await axios(config)
-            .then((res) => {
-                if (res.status === 200) {
-                    let filter_data = []
-                    res.data.map((data) => {
-                        if (
-                            data.schemaName !== 'admin' &&
-                            data.schemaName !== 'config'
-                        ) {
-                            filter_data.push(data)
-                        }
-                    })
-                    setMongoCollections(filter_data)
-                }
-            })
-            .catch((err) => {
-                console.log(err)
-                setError(err.response.messageText)
-            })
-            .finally(() => {
-                setLoading(false)
-            })
-    }, [setMongoCollections, setLoading, setMongoCollections])
-
-    return [loading, mongoCollections, error, getMongoCollection] as const
 }
 
 const Schema = () => {
@@ -125,14 +43,12 @@ const Schema = () => {
         mongoError,
         loadMongo,
     ] = useFetchMongoDB()
-
     const [
         harperLoading,
         harperSchemas,
         harperError,
         loadHarper,
     ] = useFetchHarperDB()
-
     const [selectHarper, setSelectHarper] = useState<ISelectHarper>(null)
     const [selectMongo, setSelectMongo] = useState<ISelectMongo>(null)
 
@@ -172,7 +88,6 @@ const Schema = () => {
         } else {
             setSelectMongo(null)
             setSelectHarper(null)
-            showNotification('success')
             const config: AxiosRequestConfig = {
                 method: 'POST',
                 baseURL: '/api/mongo/count',
@@ -294,83 +209,96 @@ const Schema = () => {
     return (
         <>
             <Header />
-            <div className="container mt-4">
-                <div className="row">
-                    <div className="col-md-6 col-sm-12 pt-2">
-                        <div className="row">
-                            <div className="col-6">
-                                <h4>MongoDB</h4>
-                            </div>
-                            <div
-                                className="col-6"
-                                style={{ textAlign: 'right' }}
-                            >
-                                <h4>
-                                    <Button
-                                        variant="success"
-                                        size="sm"
-                                        onClick={loadMongo}
-                                    >
-                                        {' '}
-                                        Refresh{' '}
-                                    </Button>
-                                </h4>
-                            </div>
-                        </div>
-
-                        {mongoLoading ? (
-                            <>MongoDB Loading...</>
-                        ) : (
-                            <ShowMongoSchema
-                                mongoSchemas={mongoSchemas}
-                                onSelected={setSelectMongo}
-                                currentValue={selectMongo}
-                            />
-                        )}
-                    </div>
-                    <div className="col-md-6 col-sm-12 pt-2">
-                        <div className="row">
-                            <div className="col-6">
-                                <h4>HarperDB</h4>
-                            </div>
-                            <div
-                                className="col-6"
-                                style={{ textAlign: 'right' }}
-                            >
-                                <h4>
-                                    <Button
-                                        variant="success"
-                                        size="sm"
-                                        onClick={loadHarper}
-                                    >
-                                        {' '}
-                                        Refresh{' '}
-                                    </Button>
-                                </h4>
-                            </div>
-                        </div>
-
-                        {harperLoading ? (
-                            <>HarperDB Loading...</>
-                        ) : (
-                            <ShowHarperSchema
-                                harperSchemas={harperSchemas}
-                                onSelected={setSelectHarper}
-                                currentValue={selectHarper}
-                            />
-                        )}
-                    </div>
-                    <div className="col-md-12 text-center mt-4">
+            <Container className="mt-4">
+                <Row>
+                    <Col md={9} xs={12}>
+                        <h4 className="mb-0">
+                            Select collections to transfer, then click Migrate
+                        </h4>
+                        <i>
+                            Choose MongoDB collection and HarperDB schema &gt;
+                            table.
+                        </i>
+                    </Col>
+                    <Col md={3} xs={12} className="text-right pt-1">
                         <Button
+                            block
+                            variant="primary"
                             onClick={migrating}
                             disabled={!selectMongo || !selectHarper}
                         >
-                            {' '}
-                            Migrate{' '}
+                            Migrate
                         </Button>
-                    </div>
-                </div>
-            </div>
+                    </Col>
+                </Row>
+                <hr />
+                <Row>
+                    <Col md={5} xs={12}>
+                        <Card>
+                            <Card.Body>
+                                <Row>
+                                    <Col xs={6}>
+                                        <h5 className="mb-0">
+                                            Source: MongoDB
+                                        </h5>
+                                    </Col>
+                                    <Col xs={6} className="text-right">
+                                        <Button
+                                            variant="success"
+                                            size="sm"
+                                            onClick={loadMongo}
+                                        >
+                                            Refresh
+                                        </Button>
+                                    </Col>
+                                </Row>
+                                <hr />
+                                {mongoLoading ? (
+                                    <>MongoDB Loading...</>
+                                ) : (
+                                    <ShowMongoSchema
+                                        mongoSchemas={mongoSchemas}
+                                        onSelected={setSelectMongo}
+                                        currentValue={selectMongo}
+                                    />
+                                )}
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                    <Col md={7} xs={12}>
+                        <Card>
+                            <Card.Body>
+                                <Row>
+                                    <Col xs={6}>
+                                        <h5 className="mb-0">
+                                            Destination: HarperDB
+                                        </h5>
+                                    </Col>
+                                    <Col xs={6} className="text-right">
+                                        <Button
+                                            variant="success"
+                                            size="sm"
+                                            onClick={loadHarper}
+                                        >
+                                            Refresh
+                                        </Button>
+                                    </Col>
+                                </Row>
+                                <hr />
+                                {harperLoading ? (
+                                    <>HarperDB Loading...</>
+                                ) : (
+                                    <ShowHarperSchema
+                                        harperSchemas={harperSchemas}
+                                        onSelected={setSelectHarper}
+                                        currentValue={selectHarper}
+                                    />
+                                )}
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </Container>
         </>
     )
 }
